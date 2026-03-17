@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Vocabulary Quiz</title>
+
+<link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+<link rel="manifest" href="favicon_io/site.webmanifest">
+
+<!-- CSS FILES -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/typography.css">
+<link rel="stylesheet" href="css/quiz.css">
+<link rel="stylesheet" href="css/effects.css">
+
+</head>
+
+<body oncontextmenu="return false">
+
+<div class="homeBtn" onclick="goHome()">🏠</div>
+
+<h1>Vocabulary Quiz</h1>
+
+<!-- HOME SCREEN -->
+<div id="home">
+
+<h2>Add Word</h2>
+
+<div class="addWordBox">
+
+<input id="engInput" placeholder="English">
+<input id="vieInput" placeholder="Vietnamese">
+
+<select id="posInput">
+<option>n</option>
+<option>v</option>
+<option>adj</option>
+<option>adv</option>
+</select>
+
+<button class="addBtn" onclick="addWord()">+</button>
+
+</div>
+
+<h3>Total words: <span id="totalWords">0</span></h3>
+
+<h2>Vocabulary Table</h2>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+<tr>
+<th>English</th>
+<th>POS</th>
+<th>Vietnamese</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+</div>
+
+<div class="quizOptions">
+
+<div class="quizBlock">
+
+<h2>Quiz Mode</h2>
+
+<select id="modeSelect">
+
+<option value="eng" selected>Eng → Vie</option>
+<option value="vie">Vie → Eng</option>
+<option value="mixed">Mixed</option>
+
+</select>
+
+</div>
+
+<div class="quizBlock">
+
+<h2>Quiz Level</h2>
+
+<select id="quizDifficulty">
+
+<option value="all" selected>All Words</option>
+<option value="10">Easy (10)</option>
+<option value="20">Medium (20)</option>
+<option value="30">Hard (30)</option>
+
+</select>
+
+<select id="challengeDifficulty" class="hidden">
+
+<option value="20">Easy (20s)</option>
+<option value="15">Medium (15s)</option>
+<option value="10">Hard (10s)</option>
+<option value="5">Insane (5s)</option>
+
+</select>
+
+</div>
+
+</div>
+
+<br><br>
+
+<button class="bigBtn startBtn" onclick="startQuiz()">Start Quiz</button>
+<button class="bigBtn wrongBtn" onclick="practiceWrong()">Practice Wrong Words</button>
+<button class="bigBtn challengeBtn" onclick="openChallengeMenu()">⚡ Challenge</button>
+
+</div>
+
+<!-- CHALLENGE MENU -->
+<div id="challengeMenu" class="hidden">
+
+<div class="challengeLevels">
+<button class="challengeLevelBtn easyLevel" onclick="startChallenge(20)">🌿 Easy (20s)</button>
+<button class="challengeLevelBtn mediumLevel" onclick="startChallenge(15)">🎯 Medium (15s)</button>
+<button class="challengeLevelBtn hardLevel" onclick="startChallenge(10)">🔥 Hard (10s)</button>
+<button class="challengeLevelBtn masterLevel" onclick="startChallenge(5)">💀 Master (5s)</button>
+</div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quizScreen" class="hidden">
+
+<div id="comboDisplay">🔥 Combo x1</div>
+
+<div id="progressBar">
+<div id="progress">
+<div id="progressHead"></div>
+</div>
+</div>
+
+<div id="timer">⏱ 10</div>
+
+<h2 id="question"></h2>
+
+<div id="answers"></div>
+
+<br>
+
+<button class="bigBtn backQuestionBtn" onclick="prevQuestion()">Back</button>
+<button class="bigBtn submitBtn" onclick="submitAnswer()">Submit</button>
+<button class="bigBtn nextBtn" onclick="nextQuestion()">Next</button>
+
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="resultScreen" class="hidden">
+
+<div class="resultCard">
+
+<h2>Result</h2>
+
+<div class="resultStats">
+<p>Total <span id="rTotal"></span></p>
+<p>Correct <span id="rCorrect"></span></p>
+<p>Wrong <span id="rWrong"></span></p>
+</div>
+
+<h1 id="score"></h1>
+<p id="grade"></p>
+<p id="comment"></p>
+
+<button class="bigBtn backBtn" onclick="goHome()">Back</button>
+
+</div>
+</div>
+
+<!-- THINK HELPER -->
+<div id="think-helper">
+
+<div id="think-bubble">
+Hmm… choose one before moving on!
+</div>
+
+</div>
+
+<!-- SOUND EFFECTS -->
+
+<audio id="soundSmall" src="sounds/combo_x1_x3_x5.mp3"></audio>
+<audio id="soundMedium" src="sounds/combo_x10_x20_x30.mp3"></audio>
+<audio id="sound50" src="sounds/combo_x50.mp3"></audio>
+<audio id="sound100" src="sounds/combo_x100.mp3"></audio>
+
+<!-- JS FILES -->
+
+<script src="js/storage.js"></script>
+<script src="js/vocab.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/challenge.js"></script>
+<script src="js/main.js"></script>
+<!--script src="script.js" defer></-script-->
+
+</body>
+</html>

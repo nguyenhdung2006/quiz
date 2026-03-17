@@ -1,0 +1,988 @@
+let vocab = JSON.parse(localStorage.getItem("vocab")) || [];
+let wrongWords = JSON.parse(localStorage.getItem("wrongWords")) || [];
+let totalWords = document.getElementById("totalWords");
+
+let engInput = document.getElementById("engInput");
+let vieInput = document.getElementById("vieInput");
+let posInput = document.getElementById("posInput");
+let home = document.getElementById("home");
+
+let quizScreen = document.getElementById("quizScreen");
+let resultScreen = document.getElementById("resultScreen");
+
+let isPracticeMode = false;
+let quizDifficulty = document.getElementById("quizDifficulty");
+let challengeDifficulty = document.getElementById("challengeDifficulty");
+
+let isChallengeMode = false;
+let questionTimer = null;
+let timeLeft = 10;
+let questionTime = 10;
+
+let selected = false;
+let hintTimer = null;
+
+let quiz = [];
+let quizData = [];
+
+let answers = [];
+let answered = [];
+
+let index = 0;
+let correctCount = 0;
+
+let combo = 0;
+let maxCombo = 0;
+
+let currentMode = "eng";
+
+let progress = document.getElementById("progress");
+let submitBtn = document.querySelector(".submitBtn");
+let nextBtn = document.querySelector(".nextBtn");
+let backBtn = document.querySelector(".backQuestionBtn");
+
+let autoSpeak = false;
+
+/* ===== difficulty & mode ===== */
+
+let difficultySelect = quizDifficulty;
+let modeSelect = document.getElementById("modeSelect");
+
+modeSelect.addEventListener("change", function () {
+
+difficultySelect.disabled = false;
+updateDifficulty();
+
+});
+
+/* ===== END ===== */
+
+renderTable();
+
+function save() {
+
+localStorage.setItem("vocab", JSON.stringify(vocab));
+localStorage.setItem("wrongWords", JSON.stringify(wrongWords));
+
+}
+
+function addWord() {
+
+let eng = engInput.value.trim();
+let vie = vieInput.value.trim();
+let pos = posInput.value;
+
+if (!eng || !vie) return;
+
+if (vocab.some(w => w.eng === eng)) {
+
+alert("Word already exists!");
+return;
+
+}
+
+vocab.push({ eng, vie, pos });
+
+save();
+renderTable();
+
+engInput.value = "";
+vieInput.value = "";
+
+}
+
+function renderTable() {
+
+let table = document.getElementById("tableBody");
+table.innerHTML = "";
+
+vocab.forEach((w, i) => {
+
+table.innerHTML += `
+
+<tr>
+<td onclick="speak('${w.eng}')" class="engWord">${w.eng}</td>
+<td>${w.pos}</td>
+<td>${w.vie}</td>
+
+<td class="actionCell">
+
+<button class="actionBtn" onclick="speak('${w.eng}')">🔊</button>
+
+<button class="actionBtn deleteBtn" onclick="deleteWord(${i})">✖</button>
+
+</td>
+</tr>
+`;
+
+});
+
+totalWords.innerText = vocab.length;
+
+updateDifficulty();
+
+}
+
+function deleteWord(i) {
+
+vocab.splice(i, 1);
+
+save();
+renderTable();
+
+}
+
+/* ===== SHUFFLE ===== */
+
+function shuffle(array) {
+
+for (let i = array.length - 1; i > 0; i--) {
+
+let j = Math.floor(Math.random() * (i + 1));
+
+[array[i], array[j]] = [array[j], array[i]];
+
+}
+
+return array;
+
+}
+
+function startQuiz() {
+clearInterval(questionTimer);
+
+progress.style.transform = "scaleX(0)";
+combo = 0;
+maxCombo = 0;
+
+document.getElementById("comboDisplay").innerText = "🔥 Combo x0";
+
+document.getElementById("timer").style.display = "none";
+challengeDifficulty.classList.add("hidden");
+quizDifficulty.classList.remove("hidden");
+
+isPracticeMode = false;
+isChallengeMode = false;
+
+if(vocab.length < 4){
+alert("You need at least 4 words to start a quiz!");
+return;
+}
+
+let num = quizDifficulty.value;
+let mode = modeSelect.value;
+
+if (num === "all") {
+
+num = vocab.length;
+
+} else {
+
+num = Number(num);
+
+}
+
+quiz = shuffle([...vocab]).slice(0, num);
+
+quizData = [];
+
+quiz.forEach(q => {
+
+let questionMode = mode;
+
+if (mode === "mixed") {
+
+questionMode = Math.random() < 0.5 ? "eng" : "vie";
+
+}
+
+let opts = [];
+
+if (questionMode === "eng") {
+
+let correct = q.vie;
+
+opts = [correct];
+
+while (opts.length < 4) {
+
+let r = vocab[Math.floor(Math.random() * vocab.length)].vie;
+
+if (!opts.includes(r)) opts.push(r);
+
+}
+
+} else {
+
+let correct = q.eng;
+
+opts = [correct];
+
+while (opts.length < 4) {
+
+let r = vocab[Math.floor(Math.random() * vocab.length)].eng;
+
+if (!opts.includes(r)) opts.push(r);
+
+}
+
+}
+
+opts = shuffle(opts);
+
+quizData.push({
+word: q,
+mode: questionMode,
+options: opts
+});
+
+});
+
+index = 0;
+answers = [];
+answered = [];
+correctCount = 0;
+
+home.classList.add("hidden");
+quizScreen.classList.remove("hidden");
+
+loadQuestion();
+
+}
+
+function startChallenge(time){
+clearInterval(questionTimer); 
+combo = 0;
+maxCombo = 0;
+
+document.getElementById("comboDisplay").innerText = "🔥 Combo x1";
+
+document.getElementById("challengeMenu").classList.remove("show");
+
+document.getElementById("timer").style.display = "block";
+
+document.getElementById("challengeMenu").classList.add("hidden");
+
+isChallengeMode = true;
+questionTime = time;
+
+if(vocab.length < 4){
+alert("You need at least 4 words!");
+return;
+}
+
+let num = vocab.length;
+let mode = modeSelect.value;
+
+quiz = shuffle([...vocab]).slice(0, num);
+
+quizData = [];
+
+quiz.forEach(q => {
+
+let questionMode = mode;
+
+if (mode === "mixed") {
+questionMode = Math.random() < 0.5 ? "eng" : "vie";
+}
+
+let opts = [];
+
+if (questionMode === "eng") {
+
+let correct = q.vie;
+opts = [correct];
+
+while (opts.length < 4) {
+let r = vocab[Math.floor(Math.random()*vocab.length)].vie;
+if(!opts.includes(r)) opts.push(r);
+}
+
+}else{
+
+let correct = q.eng;
+opts=[correct];
+
+while(opts.length<4){
+let r=vocab[Math.floor(Math.random()*vocab.length)].eng;
+if(!opts.includes(r)) opts.push(r);
+}
+
+}
+
+opts = shuffle(opts);
+
+quizData.push({
+word:q,
+mode:questionMode,
+options:opts
+});
+
+});
+
+index = 0;
+answers = [];
+answered = [];
+correctCount = 0;
+
+home.classList.add("hidden");
+quizScreen.classList.remove("hidden");
+
+loadQuestion();
+
+}
+
+
+function practiceWrong() {
+    document.getElementById("timer").style.display = "none";
+isPracticeMode = true;
+
+if (wrongWords.length == 0) {
+
+alert("No wrong words yet!");
+return;
+
+}
+
+quiz = shuffle([...wrongWords]).slice(0,30);
+
+quizData = [];
+
+quiz.forEach(q => {
+
+let questionMode = Math.random() < 0.5 ? "eng" : "vie";
+
+let opts = [];
+
+if (questionMode === "eng") {
+
+let correct = q.vie;
+
+opts = [correct];
+
+while (opts.length < 4) {
+
+let r = vocab[Math.floor(Math.random() * vocab.length)].vie;
+
+if (!opts.includes(r)) opts.push(r);
+
+}
+
+} else {
+
+let correct = q.eng;
+
+opts = [correct];
+
+while (opts.length < 4) {
+
+let r = vocab[Math.floor(Math.random() * vocab.length)].eng;
+
+if (!opts.includes(r)) opts.push(r);
+
+}
+
+}
+
+opts = shuffle(opts);
+
+quizData.push({
+word: q,
+mode: questionMode,
+options: opts
+});
+
+});
+
+index = 0;
+answers = [];
+answered = [];
+correctCount = 0;
+
+home.classList.add("hidden");
+quizScreen.classList.remove("hidden");
+
+loadQuestion();
+
+}
+
+function loadQuestion() {
+document.getElementById("timer").classList.remove("timerDanger");
+clearTimeout(hintTimer);
+
+selected = false;
+
+hideHint();
+
+startHintTimer();
+
+let percent = (index / quizData.length);
+progress.style.transform = `scaleX(${percent})`;
+
+let data = quizData[index];
+let q = data.word;
+
+currentMode = data.mode;
+
+let question;
+
+if (currentMode === "eng") {
+
+question = `What does "<span class="keyword" onclick="speak('${q.eng}')">${q.eng}</span>" mean?`;
+
+} else {
+
+question = `What is the English word for "<span class="keyword">${q.vie}</span>" ?`;
+
+}
+
+let opts = data.options;
+
+let questionEl = document.getElementById("question");
+let answersDiv = document.getElementById("answers");
+
+questionEl.innerHTML =
+`<div class="qNumber">Question ${index + 1}/${quizData.length}</div>` + question;
+
+answersDiv.innerHTML = "";
+
+opts.forEach((o, i) => {
+
+let div = document.createElement("div");
+
+div.className = "answer";
+div.innerText = (i + 1) + ". " + o;
+
+div.onclick = () => {
+
+document.querySelectorAll(".answer").forEach(a => a.classList.remove("selected"));
+
+div.classList.add("selected");
+
+answers[index] = o;
+
+selected = true;
+
+};
+
+if (answers[index] === o) {
+
+div.classList.add("selected");
+
+}
+
+answersDiv.appendChild(div);
+
+});
+
+if (index === quizData.length - 1) {
+
+submitBtn.style.display = "inline-block";
+nextBtn.style.display = "none";
+
+} else {
+
+submitBtn.style.display = "none";
+nextBtn.style.display = "inline-block";
+
+}
+
+if (index === 0) {
+
+backBtn.style.display = "none";
+
+} else {
+
+backBtn.style.display = "inline-block";
+
+}
+
+if (autoSpeak) {
+
+speak(q.eng);
+
+}
+
+if(isChallengeMode){
+clearInterval(questionTimer); 
+startQuestionTimer();
+}
+
+}
+
+function checkAnswer() {
+
+if (answered[index]) return;
+
+let q = quizData[index].word;
+let selectedAnswer = answers[index];
+
+let correct;
+
+if (currentMode === "eng") correct = q.vie;
+else correct = q.eng;
+
+if (selectedAnswer === correct) {
+
+correctCount++;
+
+updateCombo(true);
+
+if(isPracticeMode){
+wrongWords = wrongWords.filter(w => w.eng !== q.eng);
+}
+
+} else {
+
+updateCombo(false);
+// remove duplicate first
+wrongWords = wrongWords.filter(w => w.eng !== q.eng);
+
+// push new wrong word
+wrongWords.push(q);
+
+save();
+
+}
+
+answered[index] = true;
+
+}
+
+function submitAnswer() {
+
+if (!answers[index]) {
+
+showThinkHint("Hmm… choose one before moving on.");
+return;
+
+}
+
+checkAnswer();
+
+finishQuiz();
+
+}
+
+function finishQuiz() {
+
+clearInterval(questionTimer);
+quizScreen.classList.add("hidden");
+resultScreen.classList.remove("hidden");
+
+let wrong = quizData.length - correctCount;
+
+rTotal.innerText = quizData.length;
+rCorrect.innerText = correctCount + "/" + quizData.length;
+rWrong.innerText = wrong;
+
+let score10 = correctCount / quizData.length * 10;
+score10 = Number(score10.toFixed(2));
+
+score.innerText = score10 + " / 10";
+score.style.color = "#e67e22";
+
+let gradeText = "";
+let commentText = "";
+let commentColor = "";
+
+if (score10 >= 9) {
+gradeText = "A+";
+commentText = "Outstanding work!";
+commentColor = "#1f9d55";
+}
+else if (score10 >= 8.5) {
+gradeText = "A";
+commentText = "Excellent performance!";
+commentColor = "#38c172";
+}
+else if (score10 >= 8) {
+gradeText = "B+";
+commentText = "Great job, keep going!";
+commentColor = "#3490dc";
+}
+else if (score10 >= 7) {
+gradeText = "B";
+commentText = "Solid work!";
+commentColor = "#6cb2eb";
+}
+else if (score10 >= 6.5) {
+gradeText = "C+";
+commentText = "You're improving!";
+commentColor = "#f6c343";
+}
+else if (score10 >= 5.5) {
+gradeText = "C";
+commentText = "Good effort!";
+commentColor = "#ff922b";
+}
+else if (score10 >= 5) {
+gradeText = "D+";
+commentText = "Keep practicing!";
+commentColor = "#ff6b4a";
+}
+else if (score10 >= 4) {
+gradeText = "D";
+commentText = "Don't give up!";
+commentColor = "#cc5c5c";
+}
+else {
+gradeText = "F";
+commentText = "Try again, you can do it!";
+commentColor = "#e3342f";
+}
+
+grade.innerText = "Grade: " + gradeText;
+
+comment.innerText = commentText;
+comment.style.color = commentColor;
+comment.classList.add("resultComment");
+
+}
+
+function nextQuestion() {
+
+if (!answers[index]) {
+
+showThinkHint("Hmm… choose one before moving on.");
+return;
+
+}
+
+checkAnswer();
+
+index++;
+
+loadQuestion();
+
+}
+
+function prevQuestion() {
+
+index--;
+
+loadQuestion();
+
+}
+
+function speak(word) {
+
+speechSynthesis.cancel();
+
+let u = new SpeechSynthesisUtterance(word);
+
+u.lang = "en-US";
+
+speechSynthesis.speak(u);
+
+}
+
+function updateCombo(isCorrect){
+
+let comboEl = document.getElementById("comboDisplay");
+
+if(isCorrect){
+
+combo++;
+
+if(combo > maxCombo) maxCombo = combo;
+
+comboEl.innerText = "🔥 Combo x" + combo;
+
+/* ===== combo effects ===== */
+
+if(combo === 3){
+comboExplosion("Nice Combo!");
+playSound("soundSmall");
+}
+
+if(combo === 5){
+comboExplosion("Hot Streak!");
+playSound("soundSmall");
+}
+
+if(combo === 10){
+comboExplosion("UNSTOPPABLE!");
+fireworks();
+screenShake();
+playSound("soundMedium");
+}
+
+if(combo === 20){
+comboExplosion("GODLIKE!");
+screenShake();
+playSound("soundMedium");
+}
+
+if(combo === 30){
+comboExplosion("LEGENDARY!");
+screenShake();
+playSound("soundMedium");
+}
+
+if(combo === 50){
+comboExplosion("IMMORTAL!");
+fireworks();
+screenShake();
+playSound("sound50");
+}
+
+if(combo === 100){
+comboExplosion("COMBO MASTER!");
+fireworks();
+screenShake();
+playSound("sound100");
+}
+
+}else{
+
+combo = 0;
+
+comboEl.innerText = "🔥 Combo x0";
+
+}
+
+}
+
+function comboExplosion(text){
+
+let div = document.createElement("div");
+
+div.className = "comboPopup";
+
+div.innerText = text;
+
+document.body.appendChild(div);
+
+setTimeout(()=>{
+div.remove();
+},1500);
+
+}
+
+function goHome() {
+
+location.reload();
+
+}
+
+/* NEW */
+
+function updateDifficulty() {
+
+let total = vocab.length;
+
+let diff = quizDifficulty;
+let easy = diff.querySelector('option[value="10"]');
+let medium = diff.querySelector('option[value="20"]');
+let hard = diff.querySelector('option[value="30"]');
+
+easy.disabled = total < 10;
+medium.disabled = total < 20;
+hard.disabled = total < 30;
+
+}
+
+/* THINK HINT SYSTEM */
+
+function showThinkHint(text) {
+
+let helper = document.getElementById("think-helper");
+let bubble = document.getElementById("think-bubble");
+
+bubble.innerHTML = text;
+
+helper.style.display = "block";
+
+setTimeout(() => {
+
+helper.style.display = "none";
+
+}, 5000);
+
+}
+
+function hideHint() {
+
+document.getElementById("think-helper").style.display = "none";
+
+}
+
+function startHintTimer() {
+
+clearTimeout(hintTimer);
+
+hintTimer = setTimeout(() => {
+
+if (!selected) {
+
+showThinkHint("Hmm… choose one before moving on.");
+
+}
+
+}, 10000);
+
+}
+
+/* ENTER ADD WORD */
+
+engInput.addEventListener("keypress", function (e) {
+
+if (e.key === "Enter") addWord();
+
+});
+
+vieInput.addEventListener("keypress", function (e) {
+
+if (e.key === "Enter") addWord();
+
+});
+
+/* KEYBOARD ANSWER */
+
+document.addEventListener("keydown", function (e) {
+
+if (e.key >= "1" && e.key <= "4") {
+
+let i = Number(e.key) - 1;
+
+let answersDiv = document.querySelectorAll(".answer");
+
+if (answersDiv[i]) {
+
+answersDiv[i].click();
+
+}
+
+}
+
+});
+
+document.addEventListener("keydown", function(e){
+
+if(e.key === "Enter"){
+
+if(!answers[index]){
+showThinkHint("Hmm… choose one before moving on.");
+return;
+}
+
+if(index === quizData.length - 1){
+submitAnswer();
+}else{
+nextQuestion();
+}
+
+}
+
+});
+
+function updateTimerUI(){
+
+let t = document.getElementById("timer");
+
+if(t){
+t.innerText = "⏱ " + timeLeft;
+}
+
+}
+
+function startQuestionTimer(){
+
+clearInterval(questionTimer);
+
+timeLeft = questionTime;
+
+updateTimerUI();
+
+questionTimer = setInterval(()=>{
+
+timeLeft--;
+
+if(timeLeft <= 3){
+document.getElementById("timer").classList.add("timerDanger");
+}
+
+updateTimerUI();
+
+if(timeLeft<=0){
+
+clearInterval(questionTimer);
+
+checkAnswer();
+
+if(index === quizData.length-1){
+finishQuiz();
+}else{
+index++;
+loadQuestion();
+}
+
+}
+
+},1000);
+
+}
+
+function openChallengeMenu(){
+
+// ẩn toàn bộ trang home
+document.getElementById("home").classList.add("hidden");
+
+// ẩn title
+document.querySelector("h1").classList.add("hidden");
+
+// hiện menu challenge
+let menu = document.getElementById("challengeMenu");
+
+menu.classList.remove("hidden");
+menu.classList.add("show");
+}
+function fireworks(){
+
+for(let i=0;i<40;i++){
+
+let p = document.createElement("div");
+
+p.className = "particle";
+
+p.style.background =
+`hsl(${Math.random()*360},100%,60%)`;
+
+p.style.left = window.innerWidth/2 + "px";
+p.style.top = window.innerHeight/2 + "px";
+
+let x = (Math.random()-0.5)*400;
+let y = (Math.random()-0.5)*400;
+
+p.style.setProperty("--x",x+"px");
+p.style.setProperty("--y",y+"px");
+
+document.body.appendChild(p);
+
+setTimeout(()=>p.remove(),1000);
+
+}
+
+}
+
+function screenShake(){
+
+document.body.classList.add("shake");
+
+setTimeout(()=>{
+document.body.classList.remove("shake");
+},400);
+
+}
+
+function playSound(id){
+
+let s = document.getElementById(id);
+
+s.currentTime = 0;
+
+s.play();
+
+}
+
