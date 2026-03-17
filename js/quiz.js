@@ -104,7 +104,7 @@ answers = [];
 answered = [];
 correctCount = 0;
 
-home.classList.add("hidden");
+hideAllScreens();
 quizScreen.classList.remove("hidden");
 
 loadQuestion();
@@ -177,7 +177,7 @@ answers = [];
 answered = [];
 correctCount = 0;
 
-home.classList.add("hidden");
+hideAllScreens();
 quizScreen.classList.remove("hidden");
 
 loadQuestion();

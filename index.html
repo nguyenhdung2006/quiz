@@ -117,7 +117,7 @@
 <br><br>
 
 <button class="bigBtn startBtn" onclick="startQuiz()">Start Quiz</button>
-<button class="bigBtn wrongBtn" onclick="practiceWrong()">Practice Wrong Words</button>
+<button class="bigBtn wrongBtn" onclick="openMistakeScreen()">Practice Wrong Words</button>
 <button class="bigBtn challengeBtn" onclick="openChallengeMenu()">⚡ Challenge</button>
 
 </div>
@@ -178,6 +178,40 @@
 <button class="bigBtn backBtn" onclick="goHome()">Back</button>
 
 </div>
+</div>
+
+<div id="mistakeScreen" class="hidden">
+
+<h2>Mistake Words</h2>
+
+<h3>Total wrong words: <span id="totalWrongWords">0</span></h3>
+
+<h2>Mistake Words Table</h2>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+<tr>
+<th>English</th>
+<th>POS</th>
+<th>Vietnamese</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="mistakeTableBody"></tbody>
+
+</table>
+
+</div>
+
+<br><br>
+
+<button class="bigBtn startBtn" onclick="practiceWrong()">Start Practice</button>
+<button class="bigBtn backBtn" onclick="goHome()">Back</button>
+
 </div>
 
 <!-- THINK HELPER -->

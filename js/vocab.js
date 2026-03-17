@@ -79,3 +79,11 @@ let j = Math.floor(Math.random() * (i + 1));
 return array;
 
 }
+
+function removeWrongWord(eng) {
+
+    wrongWords = wrongWords.filter(w => w.eng !== eng);
+
+    save();
+
+}

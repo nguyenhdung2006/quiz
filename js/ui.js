@@ -70,3 +70,36 @@ document.querySelector("h1").classList.add("hidden");
 document.getElementById("challengeMenu").classList.add("show");
 
 }
+
+function renderMistakeTable() {
+
+let table = document.getElementById("mistakeTableBody");
+let total = document.getElementById("totalWrongWords");
+
+table.innerHTML = "";
+total.innerText = wrongWords.length;
+
+wrongWords.forEach((w, index) => {
+
+let row = `
+<tr>
+<td class="eng">${w.eng}</td>
+<td>${w.pos}</td>
+<td>${w.vie}</td>
+<td>
+<button class="speakBtn" onclick="speak('${w.eng}')">🔊</button>
+<button class="deleteBtn" onclick="deleteMistake('${w.eng}')">❌</button>
+</td>
+</tr>
+`;
+
+table.innerHTML += row;
+
+});
+
+}
+
+function deleteMistake(eng) {
+    removeWrongWord(eng);
+    renderMistakeTable();
+}

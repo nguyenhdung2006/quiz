@@ -111,3 +111,19 @@ nextQuestion();
 }
 
 });
+
+function openMistakeScreen() {
+
+document.getElementById("home").classList.add("hidden");
+document.getElementById("mistakeScreen").classList.remove("hidden");
+
+renderMistakeTable();
+
+}
+
+function hideAllScreens() {
+    home.classList.add("hidden");
+    quizScreen.classList.add("hidden");
+    resultScreen.classList.add("hidden");
+    document.getElementById("mistakeScreen").classList.add("hidden");
+}
