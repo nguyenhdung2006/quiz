@@ -351,3 +351,32 @@ animation:particleMove 1s linear forwards;
 animation:screenShake 0.4s;
 
 }
+
+.mastered {
+    background: linear-gradient(
+        90deg,
+        rgba(180,180,180,0.5),
+        rgba(200,200,200,0.5)
+    );
+}
+
+.mastered td {
+    color: #222;
+    font-style: italic;
+}
+
+.clearBtn {
+    background: #ff7675;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.clearBtn:hover {
+    background: #d63031;
+    transform: translateY(-2px);
+}

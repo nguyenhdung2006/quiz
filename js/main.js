@@ -95,21 +95,22 @@ answersDiv[i].click();
 
 document.addEventListener("keydown", function(e){
 
-if(e.key === "Enter"){
+if(e.key === "Enter" && quizData?.length){
 
-if(!answers[index]){
-showThinkHint("Hmm… choose one before moving on.");
-return;
+    if(answered[index]) return;
+
+    if(!answers[index]){
+        showThinkHint("Hmm… choose one before moving on.");
+        return;
+    }
+
+    if(index === quizData.length - 1){
+        submitAnswer();
+    }else{
+        nextQuestion();
+    }
+
 }
-
-if(index === quizData.length - 1){
-submitAnswer();
-}else{
-nextQuestion();
-}
-
-}
-
 });
 
 function openMistakeScreen() {
@@ -127,3 +128,8 @@ function hideAllScreens() {
     resultScreen.classList.add("hidden");
     document.getElementById("mistakeScreen").classList.add("hidden");
 }
+
+wrongWords = wrongWords.map(w => ({
+    ...w,
+    mastered: w.mastered || false
+}));

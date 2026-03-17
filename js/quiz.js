@@ -112,76 +112,63 @@ loadQuestion();
 }
 
 function practiceWrong() {
+
+    clearInterval(questionTimer);
+
     document.getElementById("timer").style.display = "none";
-isPracticeMode = true;
 
-if (wrongWords.length == 0) {
+    isPracticeMode = true;
+    isChallengeMode = false;
 
-alert("No wrong words yet!");
-return;
+    if (wrongWords.length == 0) {
+        alert("No wrong words yet!");
+        return;
+    }
 
-}
+    quiz = shuffle([...wrongWords]); // ✅ CHỈ GIỮ DÒNG NÀY
 
-quiz = shuffle([...wrongWords]).slice(0,30);
+    quizData = [];
 
-quizData = [];
+    quiz.forEach(q => {
+        let questionMode = Math.random() < 0.5 ? "eng" : "vie";
+        let opts = [];
 
-quiz.forEach(q => {
+        if (questionMode === "eng") {
+            let correct = q.vie;
+            opts = [correct];
 
-let questionMode = Math.random() < 0.5 ? "eng" : "vie";
+            while (opts.length < 4) {
+                let r = vocab[Math.floor(Math.random() * vocab.length)].vie;
+                if (!opts.includes(r)) opts.push(r);
+            }
+        } else {
+            let correct = q.eng;
+            opts = [correct];
 
-let opts = [];
+            while (opts.length < 4) {
+                let r = vocab[Math.floor(Math.random() * vocab.length)].eng;
+                if (!opts.includes(r)) opts.push(r);
+            }
+        }
 
-if (questionMode === "eng") {
+        opts = shuffle(opts);
 
-let correct = q.vie;
+        quizData.push({
+            word: q,
+            mode: questionMode,
+            options: opts
+        });
+    });
 
-opts = [correct];
+    index = 0;
+    answers = [];
+    answered = [];
+    correctCount = 0;
 
-while (opts.length < 4) {
+    hideAllScreens();
+    quizScreen.classList.remove("hidden");
 
-let r = vocab[Math.floor(Math.random() * vocab.length)].vie;
-
-if (!opts.includes(r)) opts.push(r);
-
-}
-
-} else {
-
-let correct = q.eng;
-
-opts = [correct];
-
-while (opts.length < 4) {
-
-let r = vocab[Math.floor(Math.random() * vocab.length)].eng;
-
-if (!opts.includes(r)) opts.push(r);
-
-}
-
-}
-
-opts = shuffle(opts);
-
-quizData.push({
-word: q,
-mode: questionMode,
-options: opts
-});
-
-});
-
-index = 0;
-answers = [];
-answered = [];
-correctCount = 0;
-
-hideAllScreens();
-quizScreen.classList.remove("hidden");
-
-loadQuestion();
-
+    loadQuestion();
 }
 
 function loadQuestion() {
@@ -303,28 +290,36 @@ else correct = q.eng;
 
 if (selectedAnswer === correct) {
 
-correctCount++;
+    correctCount++;
+    updateCombo(true);
 
-updateCombo(true);
-
-if(isPracticeMode){
-wrongWords = wrongWords.filter(w => w.eng !== q.eng);
-}
+    if (isPracticeMode) {
+        let word = wrongWords.find(w => w.eng === q.eng);
+        if (word) {
+            word.mastered = true;
+            save();
+        }
+    }
 
 } else {
 
-updateCombo(false);
-// remove duplicate first
-wrongWords = wrongWords.filter(w => w.eng !== q.eng);
+    updateCombo(false);
 
-// push new wrong word
-wrongWords.push(q);
+    // giữ lại nhưng reset mastered
+    wrongWords = wrongWords.filter(w => w.eng !== q.eng);
 
-save();
+    wrongWords.push({
+        ...q,
+        mastered: false
+    });
 
+    save();
 }
 
 answered[index] = true;
+
+// 🔥 luôn update UI
+renderMistakeTable();
 
 }
 

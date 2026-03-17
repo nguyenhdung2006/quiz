@@ -82,8 +82,10 @@ total.innerText = wrongWords.length;
 wrongWords.forEach((w, index) => {
 
 let row = `
-<tr>
-<td class="eng">${w.eng}</td>
+<tr class="${w.mastered ? 'mastered' : ''}">
+<td class="eng">
+    ${w.eng} ${w.mastered ? "✔" : ""}
+</td>
 <td>${w.pos}</td>
 <td>${w.vie}</td>
 <td>

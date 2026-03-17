@@ -13,7 +13,7 @@ return;
 
 }
 
-vocab.push({ eng, vie, pos });
+vocab.push({ eng, vie, pos, mastered: false });
 
 save();
 renderTable();
@@ -64,6 +64,22 @@ renderTable();
 
 }
 
+function clearMastered(){
+
+    let count = wrongWords.filter(w => w.mastered).length;
+
+    if(count === 0){
+        alert("No mastered words to clear!");
+        return;
+    }
+
+    if(!confirm(`Delete ${count} mastered words?`)) return;
+
+    wrongWords = wrongWords.filter(w => !w.mastered);
+
+    save();
+    renderMistakeTable();
+}
 /* ===== SHUFFLE ===== */
 
 function shuffle(array) {
@@ -81,9 +97,7 @@ return array;
 }
 
 function removeWrongWord(eng) {
-
     wrongWords = wrongWords.filter(w => w.eng !== eng);
-
     save();
-
+    renderMistakeTable(); // 🔥 thiếu cái này
 }
