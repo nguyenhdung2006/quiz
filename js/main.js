@@ -1,3 +1,10 @@
+// ================= BẢO VỆ TRANG =================
+// Kiểm tra xem đã có vé thông hành (đã đăng nhập) chưa
+if (sessionStorage.getItem("isAuthorized") !== "true") {
+    // Chưa có vé -> Đá văng về trang đăng nhập
+    // Dùng replace() để người dùng không bấm nút "Back" trên trình duyệt để quay lại được
+    window.location.replace("login.html"); 
+}
 let vocab = JSON.parse(localStorage.getItem("vocab")) || [];
 let wrongWords = JSON.parse(localStorage.getItem("wrongWords")) || [];
 let totalWords = document.getElementById("totalWords");
@@ -133,3 +140,19 @@ wrongWords = wrongWords.map(w => ({
     ...w,
     mastered: w.mastered || false
 }));
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        // 1. Xé vé thông hành (xóa Session)
+        sessionStorage.removeItem("isAuthorized");
+        
+        // Ghi chú: Chúng ta KHÔNG xóa localStorage ở đây 
+        // để giữ lại tính năng "Remember me" cho lần đăng nhập sau.
+
+        // 2. Quay về trang đăng nhập
+        window.location.replace("login.html");
+    });
+}
+
