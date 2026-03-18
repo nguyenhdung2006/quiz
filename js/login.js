@@ -68,20 +68,24 @@ togglePassBtn.addEventListener("click", () => {
         togglePassBtn.textContent = "👁️";
     }
 });
-
-
-
 // ================= GOD EVOLUTION =================
 
 const container = document.getElementById("butterfly-container");
 const uiElements = document.querySelectorAll("input, button, .login-box");
 
-const frames = [
-    "../images/frame1.png","../images/frame2.png","../images/frame3.png",
-    "../images/frame4.png","../images/frame5.png","../images/frame6.png",
-    "../images/frame7.png","../images/frame8.png","../images/frame9.png",
-    "../images/frame10.png"
+// Sửa 1: Đổi đường dẫn ảnh thành dạng chuẩn cho GitHub Pages và preload ảnh
+const framePaths = [
+    "./images/frame1.png","./images/frame2.png","./images/frame3.png",
+    "./images/frame4.png","./images/frame5.png","./images/frame6.png",
+    "./images/frame7.png","./images/frame8.png","./images/frame9.png",
+    "./images/frame10.png"
 ];
+
+// Ép trình duyệt tải trước toàn bộ ảnh vào bộ nhớ tạm (Fix lỗi 429)
+framePaths.forEach(path => {
+    const img = new Image();
+    img.src = path;
+});
 
 const butterflies = [];
 const COUNT = 10;
@@ -127,7 +131,7 @@ function createButterfly(){
         y:Math.random()*container.clientHeight,
         vx:0, vy:0,
         angle:0,
-        frame:Math.random()*frames.length,
+        frame:Math.random()*framePaths.length,
         noiseT:Math.random()*1000,
 
         gender:genders[Math.floor(Math.random()*2)],
@@ -158,7 +162,6 @@ function update(){
         let dy=b.targetY-b.y;
         let dist=Math.hypot(dx,dy);
 
-        // ===== FLOCK =====
         // ===== FLOCK (GIẢM HÚT - TĂNG ĐẨY) =====
         let ax=0, ay=0, cx=0, cy=0, sx=0, sy=0, count=0;
 
@@ -167,14 +170,14 @@ function update(){
             let dx=o.x-b.x, dy=o.y-b.y;
             let d=Math.hypot(dx,dy);
 
-            if(d < 100){ // Chỉ tính toán khi ở gần nhau
+            if(d < 100){ 
                 ax += o.vx; 
                 ay += o.vy;
                 cx += o.x; 
                 cy += o.y;
                 count++;
 
-                if(d < 60){ // NẾU QUÁ GẦN THÌ ĐẨY NHAU RA MẠNH
+                if(d < 60){ 
                     sx -= dx * 0.6;
                     sy -= dy * 0.6;
                 }
@@ -183,7 +186,7 @@ function update(){
 
         if(count > 0){
             ax /= count;
-            cx = (cx/count - b.x) * 0.005; // Lực hút tâm cực nhẹ
+            cx = (cx/count - b.x) * 0.005; 
             cy = (cy/count - b.y) * 0.005;
 
             b.vx += ax*0.02 + cx + sx*0.08; 
@@ -239,7 +242,6 @@ function update(){
         const W = rect.width;
         const H = rect.height;
 
-        // Nếu bay văng quá xa thì "hồi sinh" ngẫu nhiên (không để dồn vào giữa)
         if (b.x < -200 || b.x > W + 200 || b.y < -200 || b.y > H + 200) {
             b.x = Math.random() * W;
             b.y = Math.random() * H;
@@ -247,7 +249,6 @@ function update(){
             b.vy = (Math.random() - 0.5) * 4;
         }
 
-        // Chạm biên thì đẩy ngược lại nhẹ nhàng
         if (b.x < m) { b.vx += 0.4; }
         if (b.x > W - m) { b.vx -= 0.4; }
         if (b.y < m) { b.vy += 0.4; }
@@ -259,40 +260,30 @@ function update(){
         diff=Math.atan2(Math.sin(diff),Math.cos(diff));
         b.angle+=diff*0.08;
 
-        // ===== SCALE + FILTER (FIX GỘP) =====
+        // ===== SCALE + FILTER =====
         let scale=0.6+(b.y/rect.height)*0.6;
         let depth=Math.abs(0.5-(b.y/rect.height));
         let blur=depth*2 + speed*0.3;
 
-        b.el.style.filter =
-            `blur(${blur}px)
-             brightness(${1.05 + scale*0.2})
-             contrast(1.05)
-             saturate(1.05)`;
+        b.el.style.filter = `blur(${blur}px) brightness(${1.05 + scale*0.2}) contrast(1.05) saturate(1.05)`;
 
         // ===== WING =====
         b.frame+=0.15+speed*0.3;
-        let idx=Math.floor(b.frame)%frames.length;
-        b.el.style.backgroundImage=`url(${frames[idx]})`;
+        let idx=Math.floor(b.frame)%framePaths.length;
+        b.el.style.backgroundImage=`url(${framePaths[idx]})`;
 
         // ===== SHADOW =====
-        b.shadow.style.transform =
-            `translate(${b.x}px,${b.y+20}px) scale(${scale*0.8})`;
+        b.shadow.style.transform = `translate(${b.x}px,${b.y+20}px) scale(${scale*0.8})`;
         b.shadow.style.opacity = 0.2 + scale*0.3;
 
         // ===== APPLY =====
-        b.el.style.transform =
-            `translate(${b.x}px,${b.y}px)
-             rotate(${b.angle*180/Math.PI}deg)
-             scale(${scale})`;
+        b.el.style.transform = `translate(${b.x}px,${b.y}px) rotate(${b.angle*180/Math.PI}deg) scale(${scale})`;
     });
 
     requestAnimationFrame(update);
 }
 
 update();
-
-
 
 // ================= WEBGL ENGINE =================
 
@@ -317,13 +308,10 @@ uniform vec2 resolution;
 
 void main(){
     vec2 uv = gl_FragCoord.xy / resolution;
-
-    // gradient động
     float r = 0.5 + 0.5*sin(time + uv.x*3.0);
     float g = 0.5 + 0.5*sin(time*0.7 + uv.y*4.0);
     float b = 0.5 + 0.5*sin(time*1.3);
-
-    gl_FragColor = vec4(r,g,b,0.15); // nền nhẹ
+    gl_FragColor = vec4(r,g,b,0.15); 
 }
 `;
 
@@ -359,24 +347,35 @@ const resLoc = gl.getUniformLocation(program,"resolution");
 // ===== PARTICLES (PHẤN HOA) =====
 const particles = [];
 
+// Sửa 2: Tạo sẵn 80 hạt ở bên ngoài vòng lặp để tránh tràn RAM/CPU (Fix giật lag)
 for(let i=0;i<80;i++){
+    let dot = document.createElement("div");
+    dot.style.position = "fixed";
+    dot.style.width = "2px";
+    dot.style.height = "2px";
+    dot.style.background = "rgba(255,255,200,0.4)";
+    dot.style.borderRadius = "50%";
+    dot.style.pointerEvents = "none";
+    dot.style.zIndex = "0"; 
+    document.body.appendChild(dot);
+
     particles.push({
         x: Math.random()*canvas.width,
         y: Math.random()*canvas.height,
         vx: (Math.random()-0.5)*0.5,
         vy: (Math.random()-0.5)*0.5,
-        life: Math.random()*100
+        life: Math.random()*100,
+        el: dot 
     });
 }
 
 // ===== SEASON SYSTEM =====
-let season = 0; // 0 xuân, 1 hè, 2 thu, 3 đông
+let season = 0; 
 
 setInterval(()=>{
     season = (season+1)%4;
 }, 15000);
 
-// ===== DRAW LOOP =====
 // ===== DRAW LOOP =====
 function renderGL(t){
     gl.viewport(0,0,canvas.width,canvas.height);
@@ -385,13 +384,12 @@ function renderGL(t){
 
     gl.drawArrays(gl.TRIANGLES,0,6);
 
-    // ===== TỐI ƯU PARTICLE (PHẤN HOA) =====
+    // ===== TỐI ƯU PARTICLE =====
     particles.forEach(p=>{
         p.x += p.vx;
         p.y += p.vy;
         p.life--;
 
-        // Hiệu ứng gió theo mùa
         if(season===0) p.vy -= 0.05; 
         if(season===1) p.vx += 0.05;
         if(season===2) p.vy += 0.05;
@@ -402,28 +400,10 @@ function renderGL(t){
             p.life = 100;
         }
 
-        // TÌM VÀ CẬP NHẬT DOT (Thay vì tạo mới liên tục)
-        // Cách này giúp trình duyệt không bị quá tải và không bị chấm đè lên Form
-        let dotId = `dot-${particles.indexOf(p)}`;
-        let dot = document.getElementById(dotId);
-        
-        if(!dot) {
-            dot = document.createElement("div");
-            dot.id = dotId;
-            dot.style.position = "fixed";
-            dot.style.width = "2px";
-            dot.style.height = "2px";
-            dot.style.background = "rgba(255,255,200,0.4)";
-            dot.style.borderRadius = "50%";
-            dot.style.pointerEvents = "none";
-            // QUAN TRỌNG: Cho nó nằm dưới cùng để không đè lên ô Password
-            dot.style.zIndex = "0"; 
-            document.body.appendChild(dot);
-        }
-
-        dot.style.left = p.x + "px";
-        dot.style.top = p.y + "px";
-        dot.style.opacity = p.life / 100; // Làm mờ dần khi sắp hết "thọ"
+        // Chỉ di chuyển vị trí thẻ div đã có sẵn, mượt hơn 100 lần!
+        p.el.style.left = p.x + "px";
+        p.el.style.top = p.y + "px";
+        p.el.style.opacity = p.life / 100; 
     });
 
     requestAnimationFrame(renderGL);
