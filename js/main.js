@@ -5,17 +5,34 @@ if (sessionStorage.getItem("isAuthorized") !== "true") {
     // Dùng replace() để người dùng không bấm nút "Back" trên trình duyệt để quay lại được
     window.location.replace("login.html"); 
 }
-let vocab = JSON.parse(localStorage.getItem("vocab")) || [];
-let wrongWords = JSON.parse(localStorage.getItem("wrongWords")) || [];
+function readLocalArray(key) {
+    try {
+        let value = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(value) ? value : [];
+    } catch (error) {
+        localStorage.removeItem(key);
+        return [];
+    }
+}
+
+let vocab = readLocalArray("vocab");
+let wrongWords = readLocalArray("wrongWords");
+vocab = vocab.map(normalizeWord).filter(w => w.eng && w.vie);
+wrongWords = wrongWords.map(normalizeWord).filter(w => w.eng && w.vie);
+
 let totalWords = document.getElementById("totalWords");
 
 let engInput = document.getElementById("engInput");
 let vieInput = document.getElementById("vieInput");
 let posInput = document.getElementById("posInput");
+let tagInput = document.getElementById("tagInput");
+let exampleInput = document.getElementById("exampleInput");
+let noteInput = document.getElementById("noteInput");
 let home = document.getElementById("home");
 
 let quizScreen = document.getElementById("quizScreen");
 let resultScreen = document.getElementById("resultScreen");
+let reviewScreen = document.getElementById("reviewScreen");
 
 let isPracticeMode = false;
 let quizDifficulty = document.getElementById("quizDifficulty");
@@ -80,6 +97,13 @@ if (e.key === "Enter") addWord();
 
 });
 
+[tagInput, exampleInput, noteInput].forEach(input => {
+if (!input) return;
+input.addEventListener("keypress", function (e) {
+if (e.key === "Enter") addWord();
+});
+});
+
 /* KEYBOARD ANSWER */
 
 document.addEventListener("keydown", function (e) {
@@ -123,6 +147,7 @@ if(e.key === "Enter" && quizData?.length){
 function openMistakeScreen() {
 
 document.getElementById("home").classList.add("hidden");
+document.querySelector(".heroPanel")?.classList.add("hidden");
 document.getElementById("mistakeScreen").classList.remove("hidden");
 
 renderMistakeTable();
@@ -130,9 +155,11 @@ renderMistakeTable();
 }
 
 function hideAllScreens() {
+    document.querySelector(".heroPanel")?.classList.add("hidden");
     home.classList.add("hidden");
     quizScreen.classList.add("hidden");
     resultScreen.classList.add("hidden");
+    reviewScreen.classList.add("hidden");
     document.getElementById("mistakeScreen").classList.add("hidden");
 }
 
@@ -140,6 +167,16 @@ wrongWords = wrongWords.map(w => ({
     ...w,
     mastered: w.mastered || false
 }));
+
+let autoSpeakToggle = document.getElementById("autoSpeakToggle");
+if (autoSpeakToggle) {
+    autoSpeak = localStorage.getItem("autoSpeak") === "true";
+    autoSpeakToggle.checked = autoSpeak;
+    autoSpeakToggle.addEventListener("change", () => {
+        autoSpeak = autoSpeakToggle.checked;
+        localStorage.setItem("autoSpeak", autoSpeak ? "true" : "false");
+    });
+}
 
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -155,4 +192,3 @@ if (logoutBtn) {
         window.location.replace("login.html");
     });
 }
-

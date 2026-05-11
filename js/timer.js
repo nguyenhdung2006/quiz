@@ -1,62 +1,48 @@
 function startHintTimer() {
-
 clearTimeout(hintTimer);
 
 hintTimer = setTimeout(() => {
-
 if (!selected) {
-
-showThinkHint("Hmm… choose one before moving on.");
-
+showThinkHint("Hmm... choose one before moving on.");
 }
-
 }, 10000);
-
 }
 
-function updateTimerUI(){
-
+function updateTimerUI() {
 let t = document.getElementById("timer");
 
-if(t){
-t.innerText = "⏱ " + timeLeft;
+if (t) {
+t.innerText = "Time " + timeLeft;
+}
 }
 
-}
-
-function startQuestionTimer(){
-
+function startQuestionTimer() {
 clearInterval(questionTimer);
 
 timeLeft = questionTime;
-
 updateTimerUI();
 
-questionTimer = setInterval(()=>{
-
+questionTimer = setInterval(() => {
 timeLeft--;
 
-if(timeLeft <= 3){
+if (timeLeft <= 3) {
 document.getElementById("timer").classList.add("timerDanger");
 }
 
 updateTimerUI();
 
-if(timeLeft<=0){
-
+if (timeLeft <= 0) {
 clearInterval(questionTimer);
 
 checkAnswer();
 
-if(index === quizData.length-1){
+if (index === quizData.length - 1) {
+progress.style.width = "100%";
 finishQuiz();
-}else{
+} else {
 index++;
 loadQuestion();
 }
-
 }
-
-},1000);
-
+}, 1000);
 }

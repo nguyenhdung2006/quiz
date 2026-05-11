@@ -19,16 +19,44 @@
 <link rel="stylesheet" href="css/typography.css">
 <link rel="stylesheet" href="css/quiz.css">
 <link rel="stylesheet" href="css/effects.css">
+<link rel="stylesheet" href="css/modern.css">
 
 </head>
 
 <body oncontextmenu="return false">
 <div class="homeBtn" onclick="goHome()">🏠</div>
 <div class="logoutBtn" id="logoutBtn">🚪</div>
+<div class="utilityBar">
+<button class="utilityBtn" id="previewBtn" type="button">Preview</button>
+<button class="utilityBtn" id="themeToggleBtn" type="button">Theme</button>
+<button class="utilityBtn" id="exportBtn" type="button">Export</button>
+<button class="utilityBtn" id="importBtn" type="button">Import</button>
+<input id="importFile" type="file" accept="application/json,.json" hidden>
+</div>
+
+<header class="heroPanel">
+<div class="heroEyebrow">Private vocabulary trainer</div>
 <h1>Vocabulary Quiz</h1>
+<p>Build your word list, play fast quiz rounds, and turn mistakes into mastery.</p>
+</header>
 
 <!-- HOME SCREEN -->
 <div id="home">
+
+<section class="dashboardPanel">
+<div class="dashCard">
+<span class="dashLabel">Words</span>
+<strong id="totalWordsTop">0</strong>
+</div>
+<div class="dashCard">
+<span class="dashLabel">Wrong Bank</span>
+<strong id="totalWrongWordsTop">0</strong>
+</div>
+<div class="dashCard">
+<span class="dashLabel">Main Loop</span>
+<strong>Add - Quiz - Review</strong>
+</div>
+</section>
 
 <h2>Add Word</h2>
 
@@ -36,13 +64,19 @@
 
 <input id="engInput" placeholder="English">
 <input id="vieInput" placeholder="Vietnamese">
+<input id="tagInput" placeholder="Tag (school, family...)">
 
 <select id="posInput">
 <option>n</option>
 <option>v</option>
 <option>adj</option>
 <option>adv</option>
+<option value="proverb">Proverb</option>
+<option value="idiom">Idiom</option>
 </select>
+
+<input id="exampleInput" class="wideInput" placeholder="Example sentence">
+<input id="noteInput" class="wideInput" placeholder="Meaning / note">
 
 <button class="addBtn" onclick="addWord()">+</button>
 
@@ -52,6 +86,14 @@
 
 <h2>Vocabulary Table</h2>
 
+<div class="tableTools">
+<label class="searchBox" for="vocabSearch">
+<span>Search</span>
+<input id="vocabSearch" placeholder="Find English, Vietnamese, POS, tag, note, or level">
+</label>
+<button class="miniBtn" id="clearSearch" type="button">Clear</button>
+</div>
+
 <div class="table-container">
 
 <table>
@@ -60,7 +102,9 @@
 <tr>
 <th>English</th>
 <th>POS</th>
+<th>Tag</th>
 <th>Vietnamese</th>
+<th>Level</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -111,12 +155,21 @@
 
 </div>
 
+<div class="playSettings">
+<label class="toggleLine">
+<input id="autoSpeakToggle" type="checkbox">
+<span>Auto speak English words</span>
+</label>
+</div>
+
 </div>
 
 <br><br>
 
 <button class="bigBtn startBtn" onclick="startQuiz()">Start Quiz</button>
 <button class="bigBtn wrongBtn" onclick="openMistakeScreen()">Practice Wrong Words</button>
+<button class="bigBtn favoriteBtn" onclick="practiceFavorites()">Practice Favorites</button>
+<button class="bigBtn dailyBtn" onclick="startDailyChallenge()">Daily Challenge</button>
 <button class="bigBtn challengeBtn" onclick="openChallengeMenu()">⚡ Challenge</button>
 
 </div>
@@ -174,9 +227,20 @@
 <p id="grade"></p>
 <p id="comment"></p>
 
+<button class="bigBtn reviewBtn" onclick="openReviewScreen()">Review Answers</button>
 <button class="bigBtn backBtn" onclick="goHome()">Back</button>
 
 </div>
+</div>
+
+<div id="reviewScreen" class="hidden">
+<h2>Answer Review</h2>
+<div class="reviewTools">
+<p>See what you picked, the correct answer, and the example or note saved with each word.</p>
+</div>
+<div id="reviewList" class="reviewList"></div>
+<button class="bigBtn backBtn" onclick="showResultScreen()">Back To Result</button>
+<button class="bigBtn startBtn" onclick="goHome()">Home</button>
 </div>
 
 <div id="mistakeScreen" class="hidden">
@@ -199,7 +263,9 @@
 <tr>
 <th>English</th>
 <th>POS</th>
+<th>Tag</th>
 <th>Vietnamese</th>
+<th>Level</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -226,6 +292,72 @@ Hmm… choose one before moving on!
 
 </div>
 
+<!-- APP PREVIEW / GUIDE -->
+<div id="appPreview" class="previewOverlay hidden" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+<div class="previewPanel">
+<button class="previewClose" id="previewCloseBtn" type="button" aria-label="Close preview">x</button>
+
+<div class="previewHeader">
+<div>
+<span class="heroEyebrow">Game manual</span>
+<h2 id="previewTitle">How Vocabulary Quiz Works</h2>
+</div>
+<p>A private, lightweight trainer with favorites, daily challenge, mistake practice, examples, notes, and mastery tracking.</p>
+</div>
+
+<div class="previewGrid">
+<section class="previewCard">
+<h3>1. Build The Word Bank</h3>
+<p>Add English, Vietnamese, and part of speech. The app stores everything locally in this browser.</p>
+</section>
+
+<section class="previewCard">
+<h3>2. Choose A Mode</h3>
+<p>Play English to Vietnamese, Vietnamese to English, or Mixed mode. Difficulty controls how many words enter the round.</p>
+</section>
+
+<section class="previewCard">
+<h3>3. Answer Fast</h3>
+<p>Pick one of four answers. Number keys 1-4 work too. Challenge mode adds a countdown per question.</p>
+</section>
+
+<section class="previewCard">
+<h3>4. Master Mistakes</h3>
+<p>Wrong answers are saved into the mistake bank. Practice them later, then clear mastered words when they are stable.</p>
+</section>
+
+<section class="previewCard">
+<h3>5. Review Answers</h3>
+<p>After each quiz, open the review screen to see your answer, the correct answer, examples, and notes.</p>
+</section>
+
+<section class="previewCard">
+<h3>6. Build Favorites</h3>
+<p>Star important words and practice them as a focused mini deck whenever you want.</p>
+</section>
+</div>
+
+<div class="previewFlow">
+<span>Add Word</span>
+<b></b>
+<span>Quiz Round</span>
+<b></b>
+<span>Combo Feedback</span>
+<b></b>
+<span>Result</span>
+<b></b>
+<span>Review</span>
+<b></b>
+<span>Practice Wrong</span>
+</div>
+
+<div class="previewNotes">
+<p><strong>Current scope:</strong> this version is client-only and private. Backend login, cloud sync, accounts, and shared progress can be added later without changing the core gameplay loop.</p>
+<p><strong>Best way to use:</strong> add a small set of words every day, play Mixed mode, then finish with Practice Wrong Words.</p>
+</div>
+</div>
+</div>
+
 <!-- SOUND EFFECTS -->
 
 <audio id="soundSmall" src="sounds/combo_x1_x3_x5.mp3"></audio>
@@ -243,7 +375,7 @@ Hmm… choose one before moving on!
 <script src="js/quiz.js"></script>
 <script src="js/challenge.js"></script>
 <script src="js/main.js"></script>
-<!--script src="script.js" defer></-script-->
+<script src="js/app.js"></script>
 
 </body>
 </html>

@@ -336,7 +336,7 @@ function renderGL(t){
 
         if(p.life <= 0){
             p.x = Math.random() * window.innerWidth;  // <-- Đổi thành window.innerWidth
-            y = Math.random() * window.innerHeight;
+            p.y = Math.random() * window.innerHeight;
             p.life = 100;
         }
 
